@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Absen Digital Anggota Dapur PPSQ Asy Syadzily 1</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#6C5CE7;       /* ungu elegan */
+    --brand-2:#00C2A8;     /* teal cerah */
+    --brand-3:#F7B500;     /* kuning aksen */
+    --bg:#0f1226;          /* gelap elegan (bukan hitam) */
+    --card:#161a39;
+    --soft:#8E9AF0;
+    --danger:#ef4444;
+  }
+  html,body{background:var(--bg); color:#e5e7eb; font-family:"Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+  /* Glow gradient background */
+  .glow:before{
+    content:"";
+    position:absolute; inset:-60px;
+    background: radial-gradient(800px 400px at 20% 0%, rgba(108,92,231,.25), transparent 60%),
+                radial-gradient(800px 400px at 80% 40%, rgba(0,194,168,.18), transparent 60%),
+                radial-gradient(600px 320px at 50% 100%, rgba(247,181,0,.18), transparent 60%);
+    filter: blur(40px);
+    z-index:-1;
+  }
+  /* Pretty switches */
+  .pill{
+    position:relative; display:inline-flex; align-items:center; gap:.5rem;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+    padding:.4rem; border-radius:999px;
+  }
+  .pill button{
+    border-radius:999px; padding:.4rem .9rem; font-weight:600;
+  }
+  .pill .active{
+    background:linear-gradient(135deg, var(--brand), var(--brand-2));
+    color:white; box-shadow:0 8px 24px rgba(108,92,231,.35), inset 0 0 0 1px rgba(255,255,255,.15);
+  }
+  /* Attendance chips */
+  .chip{ border-radius:999px; padding:.35rem .7rem; font-weight:700; cursor:pointer; transition:all .18s ease; border:1px solid rgba(255,255,255,.08)}
+  .chip:hover{ transform:translateY(-1px); }
+  .chip.selected{ box-shadow:0 8px 24px rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.15)}
+  .chip-hadir{ background:rgba(0,194,168,.18); color:#8FF4E7 }
+  .chip-alpha{ background:rgba(239,68,68,.18); color:#fecaca; animation:shake .3s ease-in-out }
+  .chip-sakit{ background:rgba(247,181,0,.18); color:#FDE68A }
+  .chip-izin{ background:rgba(108,92,231,.18); color:#c7d2fe }
+  @keyframes shake{
+    10%{ transform:translateX(-2px) rotate(-1deg) }
+    20%{ transform:translateX( 2px) rotate( 1deg) }
+    30%{ transform:translateX(-2px) rotate(-1deg) }
+    40%{ transform:translateX( 2px) rotate( 1deg) }
+  }
+  /* Row hover */
+  .row:hover{ background:rgba(255,255,255,.03) }
+  /* Card glass */
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  /* Avatar */
+  .avatar{
+    width:42px; height:42px; border-radius:999px; overflow:hidden; display:grid; place-items:center;
+    border:2px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover }
+  .avatar span{ font-weight:800; color:#fff }
+  /* Print */
+  @media print{
+    body{ background:white; color:#111827 }
+    .no-print{ display:none !important }
+    .card{ box-shadow:none; border:1px solid #e5e7eb; background:white }
+    .chip{ border:1px solid #e5e7eb }
+  }
+</style>
+</head>
+<body>
+  <div class="relative glow min-h-screen">
+    <header class="max-w-7xl mx-auto px-6 pt-10">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+            absen digital anggota dapur ppsq asy Syadzily 1
+          </h1>
+          <p class="text-slate-300 mt-2">Ditandatangani ketua bidang, <span class="font-semibold text-white">Al Ghifary</span></p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 no-print">
+          <div class="pill">
+            <button id="btnViewer" class="active">Viewer</button>
+            <button id="btnAdmin">Admin</button>
+          </div>
+          <input id="datePicker" type="date" class="bg-white/10 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--brand)] text-white" />
+          <div class="pill">
+            <button id="btnHari" class="active">Hari Ini</button>
+            <button id="btnMinggu">Mingguan</button>
+          </div>
+          <button id="btnPrint" class="bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] text-white font-semibold px-4 py-2 rounded-xl shadow-lg hover:opacity-95 active:scale-[.98]">
+            Cetak Rekap
+          </button>
+        </div>
+      </div>
+      <div class="mt-6 grid md:grid-cols-3 gap-4">
+        <div class="card p-4">
+          <div class="text-sm text-slate-300">Tanggal dipilih</div>
+          <div id="infoTanggal" class="text-xl font-bold mt-1"></div>
+        </div>
+        <div class="card p-4">
+          <div class="text-sm text-slate-300">Status mode</div>
+          <div id="infoMode" class="text-xl font-bold mt-1">Viewer (hanya lihat)</div>
+        </div>
+        <div class="card p-4">
+          <div class="text-sm text-slate-300">Rekap singkat hari ini</div>
+          <div id="infoRingkas" class="text-xl font-bold mt-1">-</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+      <div class="no-print flex items-center gap-2 mb-6">
+        <div class="pill">
+          <button id="tabNon" class="active">Non Sekolah</button>
+          <button id="tabSekolah">Sekolah</button>
+        </div>
+        <span class="text-slate-300 text-sm">Kelompok anggota</span>
+      </div>
+
+      <section id="sectionHari" class="">
+        <div id="panelNon" class="card p-5 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="text-xl font-extrabold">Non Sekolah</h2>
+            <div class="text-slate-300">Shalat: Subuh • Dzuhur • Ashar • Maghrib • Isya</div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[720px]">
+              <thead>
+                <tr class="text-left text-slate-300 border-b border-white/10">
+                  <th class="py-3">Anggota</th>
+                  <th class="py-3">Subuh</th>
+                  <th class="py-3">Dzuhur</th>
+                  <th class="py-3">Ashar</th>
+                  <th class="py-3">Maghrib</th>
+                  <th class="py-3">Isya</th>
+                  <th class="py-3">Foto</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyNon"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panelSekolah" class="card p-5 mb-8 hidden">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="text-xl font-extrabold">Sekolah</h2>
+            <div class="text-slate-300">Shalat: Subuh • Dzuhur • Ashar • Maghrib • Isya</div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[720px]">
+              <thead>
+                <tr class="text-left text-slate-300 border-b border-white/10">
+                  <th class="py-3">Anggota</th>
+                  <th class="py-3">Subuh</th>
+                  <th class="py-3">Dzuhur</th>
+                  <th class="py-3">Ashar</th>
+                  <th class="py-3">Maghrib</th>
+                  <th class="py-3">Isya</th>
+                  <th class="py-3">Foto</th>
+                </tr>
+              </thead>
+              <tbody id="tbodySekolah"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-extrabold">Rekap Harian</h3>
+            <button id="btnResetHari" class="no-print text-red-300 hover:text-red-200 font-semibold">Reset hari ini</button>
+          </div>
+          <div id="rekapHarianGrid" class="grid md:grid-cols-3 gap-4"></div>
+        </div>
+      </section>
+
+      <section id="sectionMinggu" class="hidden">
+        <div class="card p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h3 class="text-xl font-extrabold">Rekap Total Mingguan</h3>
+            <div class="no-print flex items-center gap-3">
+              <label class="text-slate-300">Mulai Minggu:</label>
+              <input id="weekStart" type="date" class="bg-white/10 border border-white/10 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--brand)] text-white" />
+              <button id="btnHitungMinggu" class="bg-white/10 border border-white/10 px-4 py-2 rounded-xl hover:bg-white/20">Hitung</button>
+            </div>
+          </div>
+
+          <div id="rekapMingguWrap" class="grid lg:grid-cols-2 gap-6">
+            <div class="p-4 rounded-xl border border-white/10 bg-white/5">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-bold">Non Sekolah</h4>
+                <span id="sumNon" class="text-slate-300 text-sm">-</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full min-w-[680px]">
+                  <thead>
+                    <tr class="text-left text-slate-300 border-b border-white/10">
+                      <th class="py-3">Anggota</th>
+                      <th class="py-3">Hadir</th>
+                      <th class="py-3">Alpha</th>
+                      <th class="py-3">Sakit</th>
+                      <th class="py-3">Izin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyWeekNon"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="p-4 rounded-xl border border-white/10 bg-white/5">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-bold">Sekolah</h4>
+                <span id="sumSekolah" class="text-slate-300 text-sm">-</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full min-w-[680px]">
+                  <thead>
+                    <tr class="text-left text-slate-300 border-b border-white/10">
+                      <th class="py-3">Anggota</th>
+                      <th class="py-3">Hadir</th>
+                      <th class="py-3">Alpha</th>
+                      <th class="py-3">Sakit</th>
+                      <th class="py-3">Izin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyWeekSekolah"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 text-slate-300">
+            Catatan: Perhitungan mingguan menjumlahkan semua shalat (5 waktu) selama 7 hari sejak tanggal mulai.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-6 pb-12">
+      <div class="card p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="font-bold">Tertandatangani:</div>
+          <div class="text-white text-lg font-extrabold">Al Ghifary</div>
+          <div class="text-slate-300">Ketua Bidang</div>
+        </div>
+        <div class="text-slate-400">Data disimpan di perangkat Anda (local). Gunakan Cetak untuk membagikan rekap.</div>
+      </div>
+    </footer>
+  </div>
+
+  <div id="adminModal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-50">
+    <div class="card p-6 w-full max-w-md bg-[var(--card)]">
+      <h3 class="text-xl font-extrabold mb-2">Masuk sebagai Admin</h3>
+      <p class="text-slate-300 mb-4">Masukkan PIN admin untuk mengedit data.</p>
+      <input id="adminPinInput" type="password" class="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--brand)] text-white mb-4" placeholder="PIN Admin" />
+      <div class="flex flex-col gap-3">
+        <div class="flex justify-end gap-3">
+          <button id="cancelAdmin" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20">Batal</button>
+          <button id="confirmAdmin" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] font-semibold">Masuk</button>
+        </div>
+        <button id="forgotPin" class="text-left text-sky-300 hover:text-sky-200">Lupa PIN?</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="fotoModal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-50">
+    <div class="card p-6 w-full max-w-lg bg-[var(--card)]">
+      <h3 class="text-xl font-extrabold mb-2">Tambah/Ubah Foto Anggota</h3>
+      <p class="text-slate-300 mb-4">Pilih anggota lalu unggah foto. Foto disimpan di perangkat Anda.</p>
+      <div class="grid md:grid-cols-2 gap-3 mb-4">
+        <select id="fotoAnggotaSelect" class="bg-white/10 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--brand)] text-white"></select>
+        <input id="fotoFile" type="file" accept="image/*" class="bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-slate-200" />
+      </div>
+      <div class="flex items-center gap-3 mb-4">
+        <button id="btnHapusFoto" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-red-300">Hapus Foto</button>
+        <button id="btnSimpanFoto" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] font-semibold">Simpan Foto</button>
+        <div class="flex-1"></div>
+        <button id="btnTutupFoto" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20">Tutup</button>
+      </div>
+      <div id="previewFoto" class="rounded-xl overflow-hidden border border-white/10 bg-white/5 grid place-items-center h-48 text-slate-300">
+        Pratinjau foto akan muncul di sini
+      </div>
+    </div>
+  </div>
+
+  <div class="no-print fixed bottom-6 right-6 z-40">
+    <div id="adminFab" class="hidden">
+      <div class="card p-4 bg-[var(--card)]">
+        <div class="flex flex-col gap-2">
+          <button id="openFotoModal" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-left">Kelola Foto Anggota</button>
+          <button id="exportData" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-left">Ekspor Data</button>
+          <button id="importData" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-left">Impor Data</button>
+          <button id="changePin" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-left">Ubah PIN Admin</button>
+          <button id="logoutAdmin" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-left text-red-300">Keluar Admin</button>
+        </div>
+      </div>
+    </div>
+    <button id="fabToggle" class="rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-2)] w-14 h-14 shadow-xl grid place-items-center hover:opacity-95 active:scale-[.98]">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 13a1 1 0 0 1-1-1V6.5a1 1 0 1 1 2 0V12a1 1 0 0 1-1 1Zm0 4.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z"/></svg>
+    </button>
+  </div>
+
+<script>
+/* =======================
+   Data & Storage Helpers
+   ======================= */
+const GROUPS = {
+  non: ["ghifar","haqi","fadhlan","hunain","misbah","hilmy","zamil"],
+  sekolah: ["hartono","alif","kevin","rayhan u","rayhan c","resa"]
+};
+const PRAYERS = ["subuh","dzuhur","ashar","maghrib","isya"];
+const STATUS = ["hadir","alpha","sakit","izin"];
+
+const sKey = {
+  pin: "absen_pin",
+  photos: "absen_foto_map",
+  daily: "absen_daily",    // { 'YYYY-MM-DD': { 'nama': { subuh:'hadir', ... } } }
+};
+
+function loadJSON(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  }catch(e){ return fallback; }
+}
+function saveJSON(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function fmtDatePretty(d){
+  const opt = { weekday:"long", year:"numeric", month:"long", day:"numeric" };
+  return d.toLocaleDateString("id-ID", opt);
+}
+function ymd(d){
+  const year = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${year}-${m}-${day}`;
+}
+
+/* =======================
+   App State
+   ======================= */
+let isAdmin = false;
+let currentDate = new Date();
+let currentGroup = "non"; // 'non' or 'sekolah'
+let showWeekly = false;
+
+let dailyData = loadJSON(sKey.daily, {}); // all dates
+let photoMap = loadJSON(sKey.photos, {}); // {nama: dataURL}
+let adminPIN = localStorage.getItem(sKey.pin) || "khidmahberkah";
+
+/* =======================
+   UI Elements
+   ======================= */
+const datePicker = document.getElementById("datePicker");
+const infoTanggal = document.getElementById("infoTanggal");
+const infoMode = document.getElementById("infoMode");
+const infoRingkas = document.getElementById("infoRingkas");
+
+const btnViewer = document.getElementById("btnViewer");
+const btnAdmin = document.getElementById("btnAdmin");
+
+const btnHari = document.getElementById("btnHari");
+const btnMinggu = document.getElementById("btnMinggu");
+
+const tabNon = document.getElementById("tabNon");
+const tabSekolah = document.getElementById("tabSekolah");
+
+const panelNon = document.getElementById("panelNon");
+const panelSekolah = document.getElementById("panelSekolah");
+
+const tbodyNon = document.getElementById("tbodyNon");
+const tbodySekolah = document.getElementById("tbodySekolah");
+
+const rekapHarianGrid = document.getElementById("rekapHarianGrid");
+const btnResetHari = document.getElementById("btnResetHari");
+
+const sectionHari = document.getElementById("sectionHari");
+const sectionMinggu = document.getElementById("sectionMinggu");
+
+const btnPrint = document.getElementById("btnPrint");
+const weekStart = document.getElementById("weekStart");
+const btnHitungMinggu = document.getElementById("btnHitungMinggu");
+const tbodyWeekNon = document.getElementById("tbodyWeekNon");
+const tbodyWeekSekolah = document.getElementById("tbodyWeekSekolah");
+const sumNon = document.getElementById("sumNon");
+const sumSekolah = document.getElementById("sumSekolah");
+
+/* Admin Modal */
+const adminModal = document.getElementById("adminModal");
+const adminPinInput = document.getElementById("adminPinInput");
+const confirmAdmin = document.getElementById("confirmAdmin");
+const cancelAdmin = document.getElementById("cancelAdmin");
+
+/* Foto Modal */
+const fotoModal = document.getElementById("fotoModal");
+const fotoAnggotaSelect = document.getElementById("fotoAnggotaSelect");
+const fotoFile = document.getElementById("fotoFile");
+const previewFoto = document.getElementById("previewFoto");
+const btnSimpanFoto = document.getElementById("btnSimpanFoto");
+const btnTutupFoto = document.getElementById("btnTutupFoto");
+const btnHapusFoto = document.getElementById("btnHapusFoto");
+
+/* Admin menu */
+const adminFab = document.getElementById("adminFab");
+const fabToggle = document.getElementById("fabToggle");
+const openFotoModal = document.getElementById("openFotoModal");
+const exportData = document.getElementById("exportData");
+const importData = document.getElementById("importData");
+const changePin = document.getElementById("changePin");
+const logoutAdmin = document.getElementById("logoutAdmin");
+
+/* =======================
+   Event Listeners
+   ======================= */
+document.addEventListener("DOMContentLoaded", () => {
+  renderUI();
+  attachEventListeners();
+});
+
+function attachEventListeners() {
+  datePicker.addEventListener("change", (e) => {
+    currentDate = new Date(e.target.value);
+    renderUI();
+  });
+
+  btnViewer.addEventListener("click", () => {
+    if (!isAdmin) return;
+    isAdmin = false;
+    renderUI();
+  });
+
+  btnAdmin.addEventListener("click", () => {
+    adminModal.style.display = "flex";
+    adminPinInput.value = "";
+    adminPinInput.focus();
+  });
+
+  confirmAdmin.addEventListener("click", () => {
+    if (adminPinInput.value === adminPIN) {
+      isAdmin = true;
+      adminModal.style.display = "none";
+      renderUI();
+    } else {
+      alert("PIN salah!");
+      adminPinInput.value = "";
+    }
+  });
+
+  cancelAdmin.addEventListener("click", () => {
+    adminModal.style.display = "none";
+  });
+
+  btnHari.addEventListener("click", () => {
+    showWeekly = false;
+    renderUI();
+  });
+
+  btnMinggu.addEventListener("click", () => {
+    showWeekly = true;
+    renderUI();
+  });
+
+  tabNon.addEventListener("click", () => {
+    currentGroup = "non";
+    renderUI();
+  });
+
+  tabSekolah.addEventListener("click", () => {
+    currentGroup = "sekolah";
+    renderUI();
+  });
+
+  btnResetHari.addEventListener("click", () => {
+    if (!isAdmin) {
+      alert("Anda harus dalam mode Admin untuk melakukan ini.");
+      return;
+    }
+    if (confirm("Yakin ingin mereset data absensi hari ini?")) {
+      delete dailyData[ymd(currentDate)];
+      saveJSON(sKey.daily, dailyData);
+      renderUI();
+    }
+  });
+
+  btnPrint.addEventListener("click", () => window.print());
+
+  weekStart.addEventListener("change", () => renderWeeklyRecap());
+  btnHitungMinggu.addEventListener("click", () => renderWeeklyRecap());
+  
+  fabToggle.addEventListener("click", () => {
+    adminFab.classList.toggle("hidden");
+    const fabIcon = fabToggle.querySelector("svg");
+    if (adminFab.classList.contains("hidden")) {
+      fabIcon.innerHTML = `<path d="M12 13a1 1 0 0 1-1-1V6.5a1 1 0 1 1 2 0V12a1 1 0 0 1-1 1Zm0 4.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z"/>`;
+    } else {
+      fabIcon.innerHTML = `<path d="M12 13a1 1 0 0 1-1-1V6.5a1 1 0 1 1 2 0V12a1 1 0 0 1-1 1Zm0 4.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z"/>`;
+    }
+  });
+
+  openFotoModal.addEventListener("click", () => {
+    fotoModal.style.display = "flex";
+    populateFotoSelect();
+    renderPreviewFoto();
+  });
+
+  btnTutupFoto.addEventListener("click", () => fotoModal.style.display = "none");
+
+  fotoAnggotaSelect.addEventListener("change", renderPreviewFoto);
+  fotoFile.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        previewFoto.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover" alt="Preview Foto"/>`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  btnSimpanFoto.addEventListener("click", () => {
+    const nama = fotoAnggotaSelect.value;
+    const file = fotoFile.files[0];
+    if (nama && file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        photoMap[nama] = event.target.result;
+        saveJSON(sKey.photos, photoMap);
+        alert(`Foto ${nama} berhasil disimpan!`);
+        renderUI();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Pilih anggota dan unggah foto terlebih dahulu.");
+    }
+  });
+
+  btnHapusFoto.addEventListener("click", () => {
+    const nama = fotoAnggotaSelect.value;
+    if (nama && photoMap[nama]) {
+      if (confirm(`Yakin ingin menghapus foto ${nama}?`)) {
+        delete photoMap[nama];
+        saveJSON(sKey.photos, photoMap);
+        alert(`Foto ${nama} berhasil dihapus.`);
+        renderUI();
+        renderPreviewFoto();
+      }
+    } else {
+      alert("Tidak ada foto untuk dihapus.");
+    }
+  });
+
+  exportData.addEventListener("click", () => {
+    const dataToExport = {
+      dailyData,
+      photoMap,
+    };
+    const jsonStr = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `absen_data_${ymd(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  importData.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const importedData = JSON.parse(event.target.result);
+            if (importedData.dailyData && importedData.photoMap) {
+              if (confirm("Yakin ingin mengimpor data? Data yang ada saat ini akan ditimpa.")) {
+                dailyData = importedData.dailyData;
+                photoMap = importedData.photoMap;
+                saveJSON(sKey.daily, dailyData);
+                saveJSON(sKey.photos, photoMap);
+                alert("Data berhasil diimpor!");
+                renderUI();
+              }
+            } else {
+              throw new Error("Format file tidak valid.");
+            }
+          } catch (error) {
+            alert("Terjadi kesalahan saat mengimpor file: " + error.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  });
+
+  changePin.addEventListener("click", () => {
+    const newPin = prompt("Masukkan PIN baru:");
+    if (newPin && newPin.trim() !== "") {
+      adminPIN = newPin.trim();
+      localStorage.setItem(sKey.pin, adminPIN);
+      alert("PIN berhasil diubah!");
+    }
+  });
+  
+  logoutAdmin.addEventListener("click", () => {
+    isAdmin = false;
+    adminFab.classList.add("hidden");
+    renderUI();
+  });
+}
+
+/* =======================
+   Render Functions
+   ======================= */
+function renderUI() {
+  updateInfo();
+  updateButtons();
+  if (showWeekly) {
+    sectionHari.classList.add("hidden");
+    sectionMinggu.classList.remove("hidden");
+    renderWeeklyRecap();
+  } else {
+    sectionHari.classList.remove("hidden");
+    sectionMinggu.classList.add("hidden");
+    renderDailyTable();
+    renderDailyRecap();
+  }
+}
+
+function updateInfo() {
+  infoTanggal.textContent = fmtDatePretty(currentDate);
+  datePicker.value = ymd(currentDate);
+
+  if (isAdmin) {
+    infoMode.textContent = "Admin (mode edit)";
+    infoMode.classList.add("text-sky-300");
+    infoMode.classList.remove("text-white");
+  } else {
+    infoMode.textContent = "Viewer (hanya lihat)";
+    infoMode.classList.remove("text-sky-300");
+    infoMode.classList.add("text-white");
+  }
+}
+
+function updateButtons() {
+  btnViewer.classList.remove("active");
+  btnAdmin.classList.remove("active");
+  btnHari.classList.remove("active");
+  btnMinggu.classList.remove("active");
+  tabNon.classList.remove("active");
+  tabSekolah.classList.remove("active");
+
+  if (isAdmin) btnAdmin.classList.add("active");
+  else btnViewer.classList.add("active");
+
+  if (showWeekly) btnMinggu.classList.add("active");
+  else btnHari.classList.add("active");
+
+  if (currentGroup === "non") {
+    tabNon.classList.add("active");
+    panelNon.classList.remove("hidden");
+    panelSekolah.classList.add("hidden");
+  } else {
+    tabSekolah.classList.add("active");
+    panelSekolah.classList.remove("hidden");
+    panelNon.classList.add("hidden");
+  }
+  
+  if (isAdmin) {
+    adminFab.classList.remove("hidden");
+    document.querySelectorAll(".chip").forEach(el => el.style.cursor = "pointer");
+  } else {
+    adminFab.classList.add("hidden");
+    document.querySelectorAll(".chip").forEach(el => el.style.cursor = "default");
+  }
+}
+
+function renderDailyTable() {
+  const anggota = GROUPS[currentGroup];
+  const tbody = currentGroup === "non" ? tbodyNon : tbodySekolah;
+  tbody.innerHTML = "";
+
+  const todayData = dailyData[ymd(currentDate)] || {};
+
+  anggota.forEach(nama => {
+    const absen = todayData[nama] || {};
+    const photo = photoMap[nama] || null;
+
+    let tr = document.createElement("tr");
+    tr.classList.add("row", "border-b", "border-white/5");
+
+    // Avatar + Nama
+    let tdNama = document.createElement("td");
+    tdNama.classList.add("py-4", "flex", "items-center", "gap-3", "font-semibold", "text-sm");
+    let avatarDiv = document.createElement("div");
+    avatarDiv.classList.add("avatar");
+    if (photo) {
+      avatarDiv.innerHTML = `<img src="${photo}" alt="${nama}" />`;
+    } else {
+      avatarDiv.innerHTML = `<span>${nama.charAt(0).toUpperCase()}</span>`;
+    }
+    let namaSpan = document.createElement("span");
+    namaSpan.innerHTML = `<div>${nama.charAt(0).toUpperCase() + nama.slice(1)}</div><div class="text-slate-400 font-normal text-xs">Anggota</div>`;
+    tdNama.append(avatarDiv, namaSpan);
+    tr.appendChild(tdNama);
+
+    // Prayers
+    PRAYERS.forEach(shalat => {
+      let tdShalat = document.createElement("td");
+      tdShalat.classList.add("py-4");
+      
+      STATUS.forEach(status => {
+        const activeClass = absen[shalat] === status ? "selected" : "";
+        const chip = document.createElement("div");
+        chip.classList.add("chip", `chip-${status}`, activeClass, "mb-1", "mr-1");
+        chip.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        chip.addEventListener("click", () => {
+          if (!isAdmin) {
+            alert("Anda harus dalam mode Admin untuk mengedit.");
+            return;
+          }
+
+          if (!dailyData[ymd(currentDate)]) {
+            dailyData[ymd(currentDate)] = {};
+          }
+          if (!dailyData[ymd(currentDate)][nama]) {
+            dailyData[ymd(currentDate)][nama] = {};
+          }
+          
+          if (dailyData[ymd(currentDate)][nama][shalat] === status) {
+            delete dailyData[ymd(currentDate)][nama][shalat];
+          } else {
+            dailyData[ymd(currentDate)][nama][shalat] = status;
+          }
+          
+          saveJSON(sKey.daily, dailyData);
+          renderDailyTable();
+          renderDailyRecap();
+        });
+
+        tdShalat.appendChild(chip);
+      });
+      tr.appendChild(tdShalat);
+    });
+    
+    // Photo button
+    let tdFoto = document.createElement("td");
+    tdFoto.classList.add("py-4");
+    if (isAdmin) {
+      let fotoBtn = document.createElement("button");
+      fotoBtn.classList.add("bg-white/10", "border", "border-white/10", "px-3", "py-1", "rounded-xl", "hover:bg-white/20");
+      fotoBtn.textContent = photo ? "Ubah" : "Tambah";
+      fotoBtn.addEventListener("click", () => {
+        fotoModal.style.display = "flex";
+        populateFotoSelect(nama);
+        renderPreviewFoto();
+      });
+      tdFoto.appendChild(fotoBtn);
+    }
+    
+    tr.appendChild(tdFoto);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDailyRecap() {
+  const todayData = dailyData[ymd(currentDate)] || {};
+  const recap = {
+    hadir: 0, alpha: 0, sakit: 0, izin: 0,
+    shalat: {}
+  };
+
+  PRAYERS.forEach(shalat => {
+    recap.shalat[shalat] = { hadir: 0, alpha: 0, sakit: 0, izin: 0 };
+  });
+
+  for (const nama in todayData) {
+    const absen = todayData[nama];
+    for (const shalat in absen) {
+      const status = absen[shalat];
+      recap.shalat[shalat][status] = (recap.shalat[shalat][status] || 0) + 1;
+      recap[status] = (recap[status] || 0) + 1;
+    }
+  }
+
+  // Update info ringkas
+  infoRingkas.textContent = `Hadir ${recap.hadir}, Alpha ${recap.alpha}, Sakit ${recap.sakit}, Izin ${recap.izin}`;
+
+  // Update rekap harian
+  rekapHarianGrid.innerHTML = "";
+  PRAYERS.forEach(shalat => {
+    const shalatRecap = recap.shalat[shalat];
+    let card = document.createElement("div");
+    card.classList.add("card", "p-4");
+    card.innerHTML = `
+      <div class="font-bold mb-2">${shalat.charAt(0).toUpperCase() + shalat.slice(1)}</div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="chip chip-hadir">Hadir ${shalatRecap.hadir}</div>
+        <div class="chip chip-alpha">Alpha ${shalatRecap.alpha}</div>
+        <div class="chip chip-sakit">Sakit ${shalatRecap.sakit}</div>
+        <div class="chip chip-izin">Izin ${shalatRecap.izin}</div>
+      </div>
+    `;
+    rekapHarianGrid.appendChild(card);
+  });
+}
+
+function renderWeeklyRecap() {
+  const startDate = weekStart.value ? new Date(weekStart.value) : new Date(ymd(currentDate));
+  
+  if (!weekStart.value) {
+    weekStart.value = ymd(startDate);
+  }
+
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+  
+  const weeklyRecap = { non: {}, sekolah: {} };
+  
+  for (const group of Object.keys(GROUPS)) {
+    GROUPS[group].forEach(nama => {
+      weeklyRecap[group][nama] = { hadir: 0, alpha: 0, sakit: 0, izin: 0 };
+    });
+  }
+
+  let tempDate = new Date(startDate);
+  let totalHadir = 0;
+  let totalAlpha = 0;
+  let totalSakit = 0;
+  let totalIzin = 0;
+  
+  while (tempDate <= endDate) {
+    const dateKey = ymd(tempDate);
+    const dayData = dailyData[dateKey] || {};
+    
+    for (const nama in dayData) {
+      const absen = dayData[nama];
+      for (const shalat in absen) {
+        const status = absen[shalat];
+        
+        let group = "";
+        if (GROUPS.non.includes(nama)) group = "non";
+        if (GROUPS.sekolah.includes(nama)) group = "sekolah";
+        
+        if (group && weeklyRecap[group][nama]) {
+          weeklyRecap[group][nama][status]++;
+          
+          if (group === "non") {
+            if (status === "hadir") totalHadir++;
+            if (status === "alpha") totalAlpha++;
+            if (status === "sakit") totalSakit++;
+            if (status === "izin") totalIzin++;
+          }
+        }
+      }
+    }
+    tempDate.setDate(tempDate.getDate() + 1);
+  }
+
+  function renderTable(group, tbody) {
+    tbody.innerHTML = "";
+    GROUPS[group].forEach(nama => {
+      const data = weeklyRecap[group][nama];
+      let tr = document.createElement("tr");
+      tr.classList.add("row", "border-b", "border-white/5");
+      tr.innerHTML = `
+        <td class="py-3 font-semibold">${nama.charAt(0).toUpperCase() + nama.slice(1)}</td>
+        <td class="py-3 text-center">${data.hadir}</td>
+        <td class="py-3 text-center">${data.alpha}</td>
+        <td class="py-3 text-center">${data.sakit}</td>
+        <td class="py-3 text-center">${data.izin}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  renderTable("non", tbodyWeekNon);
+  renderTable("sekolah", tbodyWeekSekolah);
+  
+  const totalNon = Object.values(weeklyRecap.non).reduce((sum, val) => sum + val.hadir + val.alpha + val.sakit + val.izin, 0);
+  const totalSekolah = Object.values(weeklyRecap.sekolah).reduce((sum, val) => sum + val.hadir + val.alpha + val.sakit + val.izin, 0);
+
+  sumNon.textContent = `Total: ${totalNon} Absen`;
+  sumSekolah.textContent = `Total: ${totalSekolah} Absen`;
+}
+
+
+function populateFotoSelect(selectedName = "") {
+  fotoAnggotaSelect.innerHTML = "<option value=''>Pilih Anggota</option>";
+  const allAnggota = [...GROUPS.non, ...GROUPS.sekolah];
+  allAnggota.forEach(nama => {
+    const option = document.createElement("option");
+    option.value = nama;
+    option.textContent = nama.charAt(0).toUpperCase() + nama.slice(1);
+    fotoAnggotaSelect.appendChild(option);
+  });
+  if (selectedName) {
+    fotoAnggotaSelect.value = selectedName;
+  }
+}
+
+function renderPreviewFoto() {
+  const selectedName = fotoAnggotaSelect.value;
+  previewFoto.innerHTML = "";
+  if (selectedName && photoMap[selectedName]) {
+    previewFoto.innerHTML = `<img src="${photoMap[selectedName]}" class="w-full h-full object-cover" alt="Preview Foto"/>`;
+  } else {
+    previewFoto.innerHTML = `<div class="p-4 text-center">Pratinjau foto akan muncul di sini</div>`;
+  }
+}
+
+/* Run initial render */
+renderUI();
+</script>
+</body>
+</html>
